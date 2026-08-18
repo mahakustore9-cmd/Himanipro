@@ -105,8 +105,7 @@ async function startServer() {
     }
 
     const currentSuperPass = tenantStore.getSuperAdminPassword();
-    const validSuperPins = [currentSuperPass, "admin123", "9999", "superadmin"];
-    if (validSuperPins.includes(cred)) {
+    if (cred === currentSuperPass) {
       const token = tenantStore.createSession("SUPER_ADMIN", { username: username || "superadmin" });
       tenantStore.logSuperAdminActivity("SUPER_ADMIN_LOGIN", "SUPER_ADMIN_01", "SUCCESS", "Super Admin logged in successfully.");
       return res.json({
@@ -138,19 +137,14 @@ async function startServer() {
     const cleanSchoolId = school_id.trim().toUpperCase();
     const school = tenantStore.getSchoolById(cleanSchoolId);
 
-    // Accept this school's exact configured password or PIN + standard defaults
-    const validMatches = [
-      school?.password_plain,
-      school?.password_hash,
-      (school as any)?.pin,
-      cleanSchoolId === "SCH001" ? "1234" : null,
-      cleanSchoolId === "SCH001" ? "school123" : null,
-      cleanSchoolId === "SCH002" ? "5678" : null,
-      cleanSchoolId === "SCH002" ? "xavier2026" : null,
-      "1234"
-    ].filter(Boolean);
+    // Accept only this school's exact configured password or PIN
+    const isMatch = school && (
+      (school.password_plain && cred === school.password_plain) ||
+      (school.password_hash && cred === school.password_hash) ||
+      ((school as any).pin && cred === (school as any).pin)
+    );
 
-    if (!school || !validMatches.includes(cred)) {
+    if (!school || !isMatch) {
       return res.status(401).json({
         success: false,
         errorCode: "INVALID_CREDENTIALS",

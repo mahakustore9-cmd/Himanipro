@@ -395,9 +395,8 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
   if (pathname === '/api/auth/super-admin/login' && method === 'POST') {
     const cred = (body.password || body.pin || '').toString().trim();
     const currentPass = getStoredSuperPass();
-    const valid = [currentPass, 'admin123', '9999', 'superadmin', '1234'];
 
-    if (valid.includes(cred)) {
+    if (cred === currentPass) {
       const tokenStr = `SUPER_ADMIN_TOKEN_${Date.now()}`;
       return jsonResponse({
         success: true,
@@ -414,7 +413,7 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
         }
       });
     }
-    return jsonResponse({ success: false, message: 'Invalid Super Admin password. (Default: admin123)' }, 401);
+    return jsonResponse({ success: false, message: 'Invalid Super Admin password.' }, 401);
   }
 
   // 2. School Admin Login
@@ -424,17 +423,13 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
     const cred = (body.password || body.pin || '').toString().trim();
 
     const school = schools.find(s => s.school_id.toUpperCase() === cleanId);
-    const validMatches = [
-      school?.password_plain,
-      school?.pin,
-      cleanId === 'SCH001' ? '1234' : null,
-      cleanId === 'SCH001' ? 'school123' : null,
-      cleanId === 'SCH002' ? '5678' : null,
-      cleanId === 'SCH002' ? 'xavier2026' : null,
-      '1234'
-    ].filter(Boolean);
+    const isMatch = school && (
+      (school.password_plain && cred === school.password_plain) ||
+      (school.pin && cred === school.pin) ||
+      (school.password_hash && cred === school.password_hash)
+    );
 
-    if (!school || !validMatches.includes(cred)) {
+    if (!school || !isMatch) {
       return jsonResponse({ success: false, message: 'Invalid School ID or Security PIN.' }, 401);
     }
 

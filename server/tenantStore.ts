@@ -590,7 +590,7 @@ export class MultiTenantStore {
   private activeSessions: Map<string, { role: 'SUPER_ADMIN' | 'SCHOOL_ADMIN'; schoolId?: string; username?: string; expiresAt: number }> = new Map();
   private superAdminActivityLogs: ActivityLog[] = [];
 
-  private superAdminPassword: string = 'admin123';
+  private superAdminPassword: string = process.env.SUPER_ADMIN_PASSWORD || 'admin123';
 
   constructor() {
     this.initDefaultData();
