@@ -25,7 +25,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { GAS_TEMPLATE_CODE } from '../lib/gasTemplate.js';
+import { GAS_TEMPLATE_CODE, GAS_DEPLOYMENT_INSTRUCTIONS } from '../lib/gasTemplate.js';
 import { apiFetch } from '../lib/api.js';
 
 export const SettingsModule: React.FC = () => {
@@ -345,31 +345,57 @@ export const SettingsModule: React.FC = () => {
             </div>
 
             {/* Google Apps Script Deployment Code Accordion */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Code2 className="w-4 h-4 text-indigo-600" />
-                  <span className="text-xs font-extrabold text-slate-900">
-                    Google Apps Script Code (Code.gs)
-                  </span>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">
+                      Google Apps Script Webhook Code (Code.gs)
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Copy this script to auto-generate all 12 tables and enable cloud live-sync
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleCopyCode}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 rounded-xl border border-slate-300 shadow-2xs transition active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white rounded-xl shadow-sm transition active:scale-95"
                   >
-                    <Copy className="w-3.5 h-3.5 text-blue-600" />
-                    <span>{copiedCode ? 'Copied Code!' : 'Copy Script'}</span>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedCode ? 'Copied Code!' : 'Copy Script Code'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowCode(!showCode)}
-                    className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 px-2 py-1"
+                    className="flex items-center gap-1 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl px-2.5 py-1.5 transition"
                   >
                     <span>{showCode ? 'Hide Code' : 'View Code'}</span>
                     {showCode ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
+                </div>
+              </div>
+
+              {/* Step by Step Visual Guide */}
+              <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 space-y-2">
+                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>How to connect your Google Sheet in 1 Minute:</span>
+                </p>
+                <div className="space-y-1.5 text-xs text-slate-700">
+                  {GAS_DEPLOYMENT_INSTRUCTIONS.map(item => (
+                    <div key={item.step} className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {item.step}
+                      </span>
+                      <div>
+                        <strong className="text-slate-900 font-semibold">{item.title}: </strong>
+                        <span>{item.description}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

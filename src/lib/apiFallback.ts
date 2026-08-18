@@ -363,6 +363,18 @@ export function saveSchoolDB(schoolId: string, db: any) {
   } catch (e) {}
 }
 
+export function syncToGoogleAppsScript(gasUrl: string | undefined, payload: any) {
+  if (!gasUrl || typeof gasUrl !== 'string' || !gasUrl.startsWith('http')) return;
+  try {
+    fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (e) {}
+}
+
 // Client Fallback Router
 export async function executeFallbackApi(urlStr: string, init?: RequestInit): Promise<Response> {
   const url = new URL(urlStr, window.location.origin);
@@ -588,6 +600,10 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
       };
       db.students.unshift(newStudent);
       saveSchoolDB(currentSchoolId, db);
+      syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+        action: 'save_student',
+        student: newStudent
+      });
       return jsonResponse({ success: true, message: 'Student enrolled successfully.', data: newStudent });
     }
 
@@ -668,6 +684,10 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
     };
     db.fees.unshift(newFee);
     saveSchoolDB(currentSchoolId, db);
+    syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+      action: 'save_fee',
+      fee: newFee
+    });
     return jsonResponse({ success: true, message: 'Fee collected successfully.', data: newFee });
   }
 
@@ -757,6 +777,9 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
   }
 
   if (pathname === '/api/school/connection/test' || pathname === '/api/school/connection/repair') {
+    if (db.settings?.gas_web_app_url) {
+      syncToGoogleAppsScript(db.settings.gas_web_app_url, { action: 'init_database' });
+    }
     return jsonResponse({
       success: true,
       message: '✓ Google Spreadsheet database connected & schema verified healthy.',
