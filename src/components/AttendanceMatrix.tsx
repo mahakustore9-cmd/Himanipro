@@ -19,6 +19,7 @@ import {
   Percent
 } from 'lucide-react';
 import { Student, AttendanceRecord, AttendanceSummary, AttendanceStatus } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const AttendanceMatrix: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -59,7 +60,7 @@ export const AttendanceMatrix: React.FC = () => {
   const fetchAttendance = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/school/attendance?class=${selectedClass}&section=${selectedSection}&month=${selectedMonth}&year=${selectedYear}`,
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -161,7 +162,7 @@ export const AttendanceMatrix: React.FC = () => {
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/school/attendance/save', {
+      const res = await apiFetch('/api/school/attendance/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,7 +199,7 @@ export const AttendanceMatrix: React.FC = () => {
     }));
 
     try {
-      const res = await fetch('/api/school/attendance/complete', {
+      const res = await apiFetch('/api/school/attendance/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

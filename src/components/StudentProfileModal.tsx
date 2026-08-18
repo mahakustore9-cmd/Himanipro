@@ -17,6 +17,7 @@ import {
   Printer
 } from 'lucide-react';
 import { Student } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 interface StudentProfileModalProps {
   student: Student | null;
@@ -59,7 +60,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studen
   const handleSaveEdit = async () => {
     if (!editData) return;
     try {
-      const res = await fetch('/api/school/students/update', {
+      const res = await apiFetch('/api/school/students/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

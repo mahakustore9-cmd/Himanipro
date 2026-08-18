@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SchoolTenant, SuperAdminUser, UserRole, ConnectionState } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 interface AuthContextType {
   token: string | null;
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const res = await fetch('/api/auth/me', {
+        const res = await apiFetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -98,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginSchool = async (schoolId: string, passwordOrPin: string): Promise<{ success: boolean; message: string }> => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ school_id: schoolId, password: passwordOrPin, pin: passwordOrPin })
@@ -144,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? { username: usernameOrPin, password }
         : { username: 'superadmin', password: usernameOrPin, pin: usernameOrPin };
 
-      const res = await fetch('/api/auth/super-admin/login', {
+      const res = await apiFetch('/api/auth/super-admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -195,7 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     if (token) {
-      fetch('/api/auth/logout', {
+      apiFetch('/api/auth/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       }).catch(() => {});
@@ -225,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) return { success: false, message: 'Not logged in' };
     setConnectionState('CHECKING');
     try {
-      const res = await fetch('/api/school/connection/test', {
+      const res = await apiFetch('/api/school/connection/test', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -259,7 +260,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) return { success: false, message: 'Not logged in' };
     setConnectionState('CHECKING');
     try {
-      const res = await fetch('/api/school/connection/repair', {
+      const res = await apiFetch('/api/school/connection/repair', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

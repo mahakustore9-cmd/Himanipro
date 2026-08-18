@@ -15,6 +15,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { MessageLog, Student } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const WhatsAppMessageCenter: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -34,8 +35,8 @@ export const WhatsAppMessageCenter: React.FC = () => {
     setIsLoading(true);
     try {
       const [msgRes, stuRes] = await Promise.all([
-        fetch('/api/school/messages', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/school/students', { headers: { Authorization: `Bearer ${token}` } })
+        apiFetch('/api/school/messages', { headers: { Authorization: `Bearer ${token}` } }),
+        apiFetch('/api/school/students', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       const msgData = await msgRes.json();
@@ -71,7 +72,7 @@ export const WhatsAppMessageCenter: React.FC = () => {
     const link = `https://wa.me/${cleanPhone}?text=${encodedText}`;
 
     // Mark as OPENED on backend
-    fetch('/api/school/messages/mark-opened', {
+    apiFetch('/api/school/messages/mark-opened', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

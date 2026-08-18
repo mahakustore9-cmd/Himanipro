@@ -23,6 +23,7 @@ import {
   Check,
   KeyRound
 } from 'lucide-react';
+import { apiFetch } from '../lib/api.js';
 import { SchoolConfig } from '../types/index.js';
 
 const SAMPLE_LOGOS = [
@@ -66,7 +67,7 @@ export const SuperAdminPortal: React.FC = () => {
   const fetchSchools = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/super-admin/schools', {
+      const res = await apiFetch('/api/super-admin/schools', {
         headers: {
           Authorization: `Bearer ${token}`,
           'X-Super-Admin-Token': superAdminToken || ''
@@ -95,7 +96,7 @@ export const SuperAdminPortal: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/super-admin/schools', {
+      const res = await apiFetch('/api/super-admin/schools', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +142,7 @@ export const SuperAdminPortal: React.FC = () => {
 
     setIsChangingPass(true);
     try {
-      const res = await fetch('/api/super-admin/change-password', {
+      const res = await apiFetch('/api/super-admin/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

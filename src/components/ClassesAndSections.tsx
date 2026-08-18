@@ -11,6 +11,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { Student } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const ClassesAndSections: React.FC = () => {
   const { token, setActiveView, showToast } = useAuth();
@@ -23,7 +24,7 @@ export const ClassesAndSections: React.FC = () => {
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/school/students', {
+      const res = await apiFetch('/api/school/students', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

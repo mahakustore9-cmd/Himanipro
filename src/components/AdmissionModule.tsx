@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { Student } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 interface AdmissionModuleProps {
   onSuccessNavigate?: () => void;
@@ -122,7 +123,7 @@ export const AdmissionModule: React.FC<AdmissionModuleProps> = ({ onSuccessNavig
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/school/admissions', {
+      const res = await apiFetch('/api/school/admissions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +189,7 @@ export const AdmissionModule: React.FC<AdmissionModuleProps> = ({ onSuccessNavig
     }
 
     try {
-      const res = await fetch('/api/school/send-gmail', {
+      const res = await apiFetch('/api/school/send-gmail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

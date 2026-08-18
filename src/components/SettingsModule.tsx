@@ -26,6 +26,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { GAS_TEMPLATE_CODE } from '../lib/gasTemplate.js';
+import { apiFetch } from '../lib/api.js';
 
 export const SettingsModule: React.FC = () => {
   const {
@@ -88,7 +89,7 @@ export const SettingsModule: React.FC = () => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const res = await fetch('/api/school/settings', {
+      const res = await apiFetch('/api/school/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

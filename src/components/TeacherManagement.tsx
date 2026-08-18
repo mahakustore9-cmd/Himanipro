@@ -16,6 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 import { Teacher } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const TeacherManagement: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -37,7 +38,7 @@ export const TeacherManagement: React.FC = () => {
   const fetchTeachers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/school/teachers', {
+      const res = await apiFetch('/api/school/teachers', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -63,7 +64,7 @@ export const TeacherManagement: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/school/teachers', {
+      const res = await apiFetch('/api/school/teachers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

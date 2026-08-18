@@ -16,6 +16,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { FeePayment, Student } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const FeesModule: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -38,8 +39,8 @@ export const FeesModule: React.FC = () => {
     setIsLoading(true);
     try {
       const [feesRes, stuRes] = await Promise.all([
-        fetch('/api/school/fees', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/school/students', { headers: { Authorization: `Bearer ${token}` } })
+        apiFetch('/api/school/fees', { headers: { Authorization: `Bearer ${token}` } }),
+        apiFetch('/api/school/students', { headers: { Authorization: `Bearer ${token}` } })
       ]);
       const feesData = await feesRes.json();
       const stuData = await stuRes.json();
@@ -65,7 +66,7 @@ export const FeesModule: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/school/fees/collect', {
+      const res = await apiFetch('/api/school/fees/collect', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -12,6 +12,7 @@ import {
   ExternalLink,
   ShieldCheck
 } from 'lucide-react';
+import { apiFetch } from '../lib/api.js';
 
 export const ReportsModule: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -20,7 +21,7 @@ export const ReportsModule: React.FC = () => {
   const handleExportCSV = async (type: string, filename: string) => {
     setDownloadingType(type);
     try {
-      const res = await fetch(`/api/school/reports/export?type=${type}`, {
+      const res = await apiFetch(`/api/school/reports/export?type=${type}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const blob = await res.blob();

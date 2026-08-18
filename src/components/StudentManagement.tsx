@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Student } from '../types/index.js';
 import { StudentProfileModal } from './StudentProfileModal.js';
+import { apiFetch } from '../lib/api.js';
 
 export const StudentManagement: React.FC = () => {
   const { token, setActiveView, showToast } = useAuth();
@@ -30,7 +31,7 @@ export const StudentManagement: React.FC = () => {
     setIsLoading(true);
     try {
       let url = `/api/school/students?search=${encodeURIComponent(search)}&class=${classFilter}&section=${sectionFilter}&status=${statusFilter}`;
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

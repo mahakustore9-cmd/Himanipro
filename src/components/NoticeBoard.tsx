@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Notice } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const NoticeBoard: React.FC = () => {
   const { token, currentSchool, showToast } = useAuth();
@@ -37,7 +38,7 @@ export const NoticeBoard: React.FC = () => {
   const fetchNotices = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/school/notices', {
+      const res = await apiFetch('/api/school/notices', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -64,7 +65,7 @@ export const NoticeBoard: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/school/notices', {
+      const res = await apiFetch('/api/school/notices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export const NoticeBoard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this notice?')) return;
 
     try {
-      const res = await fetch(`/api/school/notices/${noticeId}`, {
+      const res = await apiFetch(`/api/school/notices/${noticeId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

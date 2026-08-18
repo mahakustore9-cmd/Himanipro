@@ -23,6 +23,7 @@ import {
   Layers
 } from 'lucide-react';
 import { DashboardStats, ActivityLog } from '../types/index.js';
+import { apiFetch } from '../lib/api.js';
 
 export const DashboardView: React.FC = () => {
   const { token, currentSchool, setActiveView, showToast } = useAuth();
@@ -35,8 +36,8 @@ export const DashboardView: React.FC = () => {
     setIsLoading(true);
     try {
       const [dashRes, actRes] = await Promise.all([
-        fetch('/api/school/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/school/activities', { headers: { Authorization: `Bearer ${token}` } })
+        apiFetch('/api/school/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
+        apiFetch('/api/school/activities', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       const dashData = await dashRes.json();
