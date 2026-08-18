@@ -1,0 +1,6 @@
+{
+  "name": "SchoolOS - Multi-School Management SaaS",
+  "description": "Production-ready Multi-Tenant School Management Mini-SaaS with Google Sheets database architecture, Google Apps Script integration, Admissions, Attendance Matrix, WhatsApp & Gmail automation, Super Admin and School Portals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
