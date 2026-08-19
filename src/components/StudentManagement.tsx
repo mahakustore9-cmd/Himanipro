@@ -8,9 +8,15 @@ import {
   Eye,
   MessageSquare,
   Mail,
-  CalendarCheck2,
   RefreshCw,
-  MoreVertical
+  Edit2,
+  Trash2,
+  AlertTriangle,
+  GraduationCap,
+  CheckCircle2,
+  UserCheck,
+  UserX,
+  Sparkles
 } from 'lucide-react';
 import { Student } from '../types/index.js';
 import { StudentProfileModal } from './StudentProfileModal.js';
@@ -25,7 +31,12 @@ export const StudentManagement: React.FC = () => {
   const [classFilter, setClassFilter] = useState<string>('ALL');
   const [sectionFilter, setSectionFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  
+  // Modal states
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const fetchStudents = async () => {
     setIsLoading(true);
@@ -70,6 +81,47 @@ export const StudentManagement: React.FC = () => {
     window.location.href = `mailto:${student.parent_email}?subject=Regarding ${student.student_name}`;
   };
 
+  const handleOpenEdit = (student: Student) => {
+    setSelectedStudent(student);
+    setIsEditMode(true);
+  };
+
+  const handleOpenView = (student: Student) => {
+    setSelectedStudent(student);
+    setIsEditMode(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingStudent) return;
+    setIsDeleting(true);
+    try {
+      const res = await apiFetch('/api/school/students/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ student_id: deletingStudent.student_id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✓ Student ${deletingStudent.student_name} deleted and removed from Google Sheet.`, 'success');
+        setStudents(prev => prev.filter(s => s.student_id !== deletingStudent.student_id));
+        setDeletingStudent(null);
+      } else {
+        showToast(data.message || 'Failed to delete student.', 'error');
+      }
+    } catch (e) {
+      showToast('Error deleting student record.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const totalCount = students.length;
+  const activeCount = students.filter(s => s.status === 'ACTIVE').length;
+  const inactiveCount = students.filter(s => s.status !== 'ACTIVE').length;
+
   return (
     <div id="schoolos_student_management_module" className="space-y-6">
       {/* Header */}
@@ -82,17 +134,61 @@ export const StudentManagement: React.FC = () => {
             <h2 className="text-xl font-bold tracking-tight text-slate-900">Students Directory</h2>
           </div>
           <p className="text-xs text-slate-700 mt-1">
-            Complete database of enrolled students with live search, filters, profile view, and parent communication.
+            Complete database of enrolled students with live search, filters, full edit profile, delete action, and parent communication.
           </p>
         </div>
 
-        <button
-          onClick={() => setActiveView('admissions')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition active:scale-95 w-fit"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>+ New Admission</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveView('admissions')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition active:scale-95 w-fit"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ New Admission</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Summary Pill Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Enrolled</p>
+              <p className="text-lg font-black text-slate-900">{totalCount}</p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-slate-500">Students</span>
+        </div>
+
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Students</p>
+              <p className="text-lg font-black text-emerald-700">{activeCount}</p>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+        </div>
+
+        <div className="p-3.5 bg-white rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
+              <UserX className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Inactive / Alumni</p>
+              <p className="text-lg font-black text-slate-700">{inactiveCount}</p>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">Archived</span>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -149,7 +245,7 @@ export const StudentManagement: React.FC = () => {
           <button
             onClick={fetchStudents}
             className="p-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
-            title="Refresh"
+            title="Refresh list"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -186,7 +282,7 @@ export const StudentManagement: React.FC = () => {
                   <th className="py-3.5 px-3">Class</th>
                   <th className="py-3.5 px-4">Parent Contact</th>
                   <th className="py-3.5 px-3">Status</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4 text-right">Actions (Edit / Delete)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
@@ -247,15 +343,37 @@ export const StudentManagement: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* View Button */}
                         <button
-                          onClick={() => setSelectedStudent(student)}
+                          onClick={() => handleOpenView(student)}
                           className="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition"
-                          title="View Profile"
+                          title="View Full Profile"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
 
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => handleOpenEdit(student)}
+                          className="p-1.5 rounded-lg text-slate-600 hover:text-amber-700 hover:bg-amber-50 transition"
+                          title="Edit Student Record"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => setDeletingStudent(student)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition"
+                          title="Delete Student"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+
+                        <div className="w-[1px] h-4 bg-slate-200 mx-1" />
+
+                        {/* WhatsApp Parent */}
                         <button
                           onClick={() => handleWhatsAppClick(student)}
                           className="p-1.5 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition"
@@ -264,6 +382,7 @@ export const StudentManagement: React.FC = () => {
                           <MessageSquare className="w-4 h-4" />
                         </button>
 
+                        {/* Email Parent */}
                         <button
                           onClick={() => handleEmailClick(student)}
                           className="p-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition"
@@ -281,10 +400,66 @@ export const StudentManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Student Profile Modal */}
+      {/* Delete Confirmation Dialog */}
+      {deletingStudent && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Delete Student Record</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1.5">
+              <p className="text-slate-800 font-bold">
+                Student: {deletingStudent.student_name}
+              </p>
+              <p className="text-slate-600">
+                ID: <span className="font-mono">{deletingStudent.student_id}</span> • Class: {deletingStudent.class}-{deletingStudent.section}
+              </p>
+              <p className="text-slate-600">
+                Adm No: {deletingStudent.admission_number}
+              </p>
+              <p className="text-rose-700 text-[11px] pt-1 font-medium">
+                ⚠️ This will remove the student from SchoolOS and delete their row from your connected Google Sheet.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingStudent(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 rounded-xl border border-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md transition disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Deleting...' : 'Delete Permanently'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Profile / Edit Modal */}
       <StudentProfileModal
         student={selectedStudent}
-        onClose={() => setSelectedStudent(null)}
+        initialEditMode={isEditMode}
+        onClose={() => {
+          setSelectedStudent(null);
+          setIsEditMode(false);
+        }}
         onUpdate={fetchStudents}
       />
     </div>

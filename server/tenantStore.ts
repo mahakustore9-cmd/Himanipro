@@ -710,6 +710,28 @@ export class MultiTenantStore {
     return { success: true, message: 'Password reset successfully.' };
   }
 
+  public updateSchoolSettings(schoolId: string, updates: Partial<SchoolSettings & SchoolTenant>): boolean {
+    const school = this.schools.get(schoolId);
+    if (!school) return false;
+
+    if (updates.google_sheet_id !== undefined) school.google_sheet_id = updates.google_sheet_id;
+    if (updates.gas_web_app_url !== undefined) school.gas_web_app_url = updates.gas_web_app_url;
+    if (updates.school_name !== undefined) school.school_name = updates.school_name;
+    if (updates.academic_session !== undefined) school.academic_session = updates.academic_session;
+    if (updates.school_logo !== undefined) school.school_logo = updates.school_logo;
+    if (updates.principal_name !== undefined) school.principal_name = updates.principal_name;
+    if (updates.address !== undefined) school.address = updates.address;
+    if (updates.school_phone !== undefined || updates.phone !== undefined) {
+      school.school_phone = updates.school_phone || updates.phone || school.school_phone;
+    }
+    if (updates.admin_email !== undefined || updates.email !== undefined) {
+      school.admin_email = updates.admin_email || updates.email || school.admin_email;
+    }
+
+    this.schools.set(schoolId, school);
+    return true;
+  }
+
   public logSuperAdminActivity(action: string, recordId: string, status: 'SUCCESS' | 'WARNING' | 'ERROR', details: string) {
     this.superAdminActivityLogs.unshift({
       log_id: `LOG-SUPER-${Date.now()}`,

@@ -19,8 +19,8 @@ interface AuthContextType {
   updateCurrentSchool: (school: Partial<SchoolTenant>) => void;
   connectionState: ConnectionState;
   lastCheckedTime: string;
-  testConnection: () => Promise<{ success: boolean; message: string }>;
-  repairDatabase: () => Promise<{ success: boolean; message: string }>;
+  testConnection: (params?: { google_sheet_id?: string; gas_web_app_url?: string }) => Promise<{ success: boolean; message: string; data?: any }>;
+  repairDatabase: (params?: { google_sheet_id?: string; gas_web_app_url?: string }) => Promise<{ success: boolean; message: string; data?: any }>;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   toast: { message: string; type: 'success' | 'error' | 'info' | 'warning' } | null;
   activeView: string;
@@ -222,13 +222,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const testConnection = async (): Promise<{ success: boolean; message: string }> => {
+  const testConnection = async (params?: { google_sheet_id?: string; gas_web_app_url?: string }): Promise<{ success: boolean; message: string; data?: any }> => {
     if (!token) return { success: false, message: 'Not logged in' };
     setConnectionState('CHECKING');
     try {
       const res = await apiFetch('/api/school/connection/test', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(params || {})
       });
       const data = await res.json();
       const timestamp = new Date().toLocaleString('en-IN', {
@@ -236,33 +240,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
       });
       setLastCheckedTime(timestamp);
 
-      if (data.success && data.data.connected) {
+      if (data.success && data.data?.connected) {
         setConnectionState('CONNECTED');
-        showToast('Google Sheet connection verified & healthy.', 'success');
-        return { success: true, message: data.data.message };
+        showToast('✓ Google Sheet connection verified & healthy.', 'success');
+        return { success: true, message: data.data.message || 'Connected', data: data.data };
       } else {
         setConnectionState('DISCONNECTED');
-        showToast('Google Sheet connection failed.', 'error');
-        return { success: false, message: data.data?.message || 'Connection failed' };
+        const msg = data.data?.message || data.message || 'Connection test failed';
+        showToast(msg, 'error');
+        return { success: false, message: msg, data: data.data };
       }
     } catch (e) {
       setConnectionState('DISCONNECTED');
-      showToast('Connection test failed.', 'error');
+      showToast('Connection test failed. Network unreachable.', 'error');
       return { success: false, message: 'Failed to test connection' };
     }
   };
 
-  const repairDatabase = async (): Promise<{ success: boolean; message: string }> => {
+  const repairDatabase = async (params?: { google_sheet_id?: string; gas_web_app_url?: string }): Promise<{ success: boolean; message: string; data?: any }> => {
     if (!token) return { success: false, message: 'Not logged in' };
     setConnectionState('CHECKING');
     try {
       const res = await apiFetch('/api/school/connection/repair', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(params || {})
       });
       const data = await res.json();
       setConnectionState('CONNECTED');
@@ -271,14 +281,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
       });
       setLastCheckedTime(timestamp);
-      showToast(data.message, 'success');
-      return { success: true, message: data.message };
+      showToast(data.message || '✓ Schema verified and synchronized.', 'success');
+      return { success: true, message: data.message, data: data.data };
     } catch (e) {
       setConnectionState('DISCONNECTED');
-      showToast('Database repair failed.', 'error');
+      showToast('Database schema check failed.', 'error');
       return { success: false, message: 'Repair failed.' };
     }
   };
