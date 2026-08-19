@@ -697,20 +697,74 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
 
   if (pathname === '/api/school/admissions') {
     if (method === 'POST') {
+      const studentId = `${currentSchoolId}-2026-${String(db.students.length + 1).padStart(5, '0')}`;
+      const admissionNo = body.admission_number || `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const newStudent: Student = {
+        student_id: studentId,
+        admission_number: admissionNo,
+        student_name: body.student_name || body.applicant_name || 'New Student',
+        photo_url: body.photo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        father_name: body.father_name || '',
+        mother_name: body.mother_name || '',
+        dob: body.dob || '2014-01-01',
+        gender: body.gender || 'Male',
+        class: body.class || body.applying_for_class || '1',
+        section: body.section || 'A',
+        roll_number: body.roll_number || '01',
+        parent_mobile: body.parent_mobile || '',
+        parent_whatsapp: body.parent_whatsapp || body.parent_mobile || '',
+        parent_email: body.parent_email || '',
+        address: body.address || '',
+        city: body.city || 'City',
+        state: body.state || 'State',
+        pin_code: body.pin_code || '110001',
+        admission_date: body.admission_date || new Date().toISOString().split('T')[0],
+        previous_school: body.previous_school || '',
+        remarks: body.remarks || '',
+        status: 'ACTIVE',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const newAdm: Admission = {
         admission_id: `ADM-REG-${Date.now().toString().slice(-6)}`,
-        student_id: `${currentSchoolId}-2026-${String(db.students.length + 1).padStart(5, '0')}`,
-        admission_number: `ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-        student_name: body.applicant_name || body.student_name,
-        class: body.applying_for_class || body.class || '1',
-        section: 'A',
-        status: 'PENDING',
-        admission_date: new Date().toISOString().split('T')[0],
+        student_id: studentId,
+        admission_number: admissionNo,
+        student_name: newStudent.student_name,
+        class: newStudent.class,
+        section: newStudent.section,
+        status: 'COMPLETED',
+        admission_date: newStudent.admission_date,
         created_at: new Date().toISOString()
       };
+
+      db.students.unshift(newStudent);
       db.admissions.unshift(newAdm);
       saveSchoolDB(currentSchoolId, db);
-      return jsonResponse({ success: true, message: 'Admission application registered.', data: newAdm });
+
+      // Sync to Google Apps Script Web App
+      syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+        action: 'save_admission',
+        student: newStudent,
+        admission: newAdm
+      });
+
+      const messagePreview = `Dear Parent,\n\nYour child ${newStudent.student_name}'s admission is confirmed in Class ${newStudent.class}-${newStudent.section}.\nAdmission No: ${newStudent.admission_number}\n\nSchool: ${db.settings.school_name}`;
+      const phone = newStudent.parent_whatsapp || newStudent.parent_mobile || '';
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      const whatsAppLink = `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${encodeURIComponent(messagePreview)}`;
+
+      return jsonResponse({
+        success: true,
+        message: '✓ Admission application registered and saved to database.',
+        data: {
+          student: newStudent,
+          admission: newAdm,
+          whatsAppLink,
+          messagePreview
+        }
+      });
     }
     return jsonResponse({ success: true, data: db.admissions });
   }
@@ -731,6 +785,10 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
       };
       db.notices.unshift(newNotice);
       saveSchoolDB(currentSchoolId, db);
+      syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+        action: 'save_notice',
+        notice: newNotice
+      });
       return jsonResponse({ success: true, message: 'Notice published.', data: newNotice });
     }
     return jsonResponse({ success: true, data: db.notices });
@@ -740,10 +798,21 @@ export async function executeFallbackApi(urlStr: string, init?: RequestInit): Pr
     const noticeId = pathname.split('/').pop();
     db.notices = db.notices.filter((n: any) => n.notice_id !== noticeId);
     saveSchoolDB(currentSchoolId, db);
+    syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+      action: 'delete_notice',
+      notice_id: noticeId
+    });
     return jsonResponse({ success: true, message: 'Notice deleted.' });
   }
 
   if (pathname === '/api/school/attendance/save' || pathname === '/api/school/attendance/complete') {
+    syncToGoogleAppsScript(db.settings?.gas_web_app_url, {
+      action: 'save_attendance',
+      records: body.attendanceList || body.records || [],
+      class: body.class,
+      section: body.section,
+      date: body.date
+    });
     return jsonResponse({ success: true, message: 'Attendance records synchronized successfully.' });
   }
 

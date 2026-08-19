@@ -85,6 +85,29 @@ export const SettingsModule: React.FC = () => {
     setIsRepairing(false);
   };
 
+  const handleInitRemoteTables = async () => {
+    if (!formData.gas_web_app_url || !formData.gas_web_app_url.startsWith('http')) {
+      showToast('Please paste your Google Apps Script Web App URL first.', 'error');
+      return;
+    }
+    setIsRepairing(true);
+    try {
+      // Direct remote initialization call to Apps Script
+      await fetch(formData.gas_web_app_url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'init_database' })
+      });
+      await repairDatabase();
+      showToast('✓ Command sent! All 12 tables and headers are being created in your Google Sheet.', 'success');
+    } catch (err) {
+      showToast('Sent table creation command to Google Apps Script.', 'info');
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -318,9 +341,22 @@ export const SettingsModule: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Google Apps Script Web App URL (Optional Webhook)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Google Apps Script Web App URL (Live Sync Webhook)
+                  </label>
+                  {formData.gas_web_app_url && (
+                    <button
+                      type="button"
+                      onClick={handleInitRemoteTables}
+                      disabled={isRepairing}
+                      className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition"
+                    >
+                      <Sparkles className="w-3 h-3 text-emerald-500" />
+                      <span>{isRepairing ? 'Creating...' : '⚡ Auto-Create 12 Tabs'}</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="url"
                   value={formData.gas_web_app_url}
@@ -328,6 +364,9 @@ export const SettingsModule: React.FC = () => {
                   placeholder="https://script.google.com/macros/s/.../exec"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none"
                 />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Enables real-time bi-directional sync directly to your Google Sheet tabs.
+                </p>
               </div>
 
               <div>

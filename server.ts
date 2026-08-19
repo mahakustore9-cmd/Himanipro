@@ -72,6 +72,24 @@ function requireSuperAdminAuth(req: AuthenticatedSuperAdminRequest, res: Respons
   next();
 }
 
+// Background sync dispatcher to Google Apps Script Web App
+async function syncGasServer(gasUrl: string | undefined, payload: any) {
+  if (!gasUrl || !gasUrl.startsWith("http")) return;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    await fetch(gasUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+  } catch (e) {
+    // Non-blocking background sync
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -586,6 +604,13 @@ async function startServer() {
       `Completed admission for ${newStudent.student_name} (${newStudent.student_id}) in Class ${newStudent.class}-${newStudent.section}.`
     );
 
+    // Sync to Google Apps Script Web App in background
+    syncGasServer(db.settings.gas_web_app_url || req.schoolTenant.gas_web_app_url, {
+      action: "save_admission",
+      student: newStudent,
+      admission: admissionRecord
+    });
+
     res.json({
       success: true,
       message: "✓ Admission completed successfully.",
@@ -870,6 +895,12 @@ async function startServer() {
       `Created notice: ${newNotice.title} (${newNotice.priority})`
     );
 
+    // Sync notice to Google Sheets
+    syncGasServer(db.settings.gas_web_app_url || req.schoolTenant.gas_web_app_url, {
+      action: "save_notice",
+      notice: newNotice
+    });
+
     res.json({
       success: true,
       message: "Notice saved successfully.",
@@ -1019,6 +1050,12 @@ async function startServer() {
       "SUCCESS",
       `Collected ₹${paid.toLocaleString()} fee receipt ${receiptNo} for ${student.student_name}`
     );
+
+    // Sync to Google Sheet
+    syncGasServer(db.settings.gas_web_app_url || req.schoolTenant.gas_web_app_url, {
+      action: "save_fee",
+      fee: newFee
+    });
 
     res.json({ success: true, message: "Fee payment recorded and receipt generated.", data: newFee });
   };
